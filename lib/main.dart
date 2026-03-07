@@ -15,7 +15,6 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true, // Te lo recomiendo para un look moderno
       ),
-      // AQUÍ es donde llamas a tu vista de login
       home: LoginView(), 
     );
   }

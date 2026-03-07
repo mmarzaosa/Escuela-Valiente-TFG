@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
+import '../widgets/custom_star_icon.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -37,20 +38,19 @@ class _LoginViewState extends State<LoginView> {
                   children: [
                     // CONTENEDOR DE ALTURA FIJA PARA EL AVATAR Y BOCADILLO
                     SizedBox(
-                      height: 350, // Aumentamos ligeramente la altura para acomodar la estrella más grande
+                      height: 290, // Aumentamos ligeramente la altura para acomodar la estrella más grande
                       child: Stack(
                         clipBehavior: Clip.none, // Permite que sobresalga
                         children: [
                           Positioned(
-                            bottom: -15, // Ajuste para que 'pise' ligeramente el formulario
+                            bottom: -60,
                             right: -20,  // Ajuste lateral
-                            child: _buildAvatarHelper("¡Bienvenido! Inicia sesión para continuar"),
+                            child:const AvatarHelper(),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 10), // Ajuste de separación con el formulario
 
                     Form(
                       key: _formKey,
@@ -58,7 +58,7 @@ class _LoginViewState extends State<LoginView> {
                         children: [
                           _buildInputGroup(),
                           _buildForgotPassword(),
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 50),
                           _buildSubmitButton(),
                           const SizedBox(height: 5),
                           _buildSignUpLink(),
@@ -81,8 +81,9 @@ class _LoginViewState extends State<LoginView> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage("assets/images/login_background.png"),
+          image: AssetImage("assets/images/register_background.png"),
           fit: BoxFit.cover,
+          alignment: Alignment.center
         ),
       ),
     );
@@ -91,9 +92,9 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildInputGroup() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.5),
+        color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color.fromRGBO(205, 205, 205, 1)),
+        border: Border.all(color: const Color.fromRGBO(205, 205, 205, 1), width: 2),
       ),
       child: Column(
         children: [
@@ -128,7 +129,7 @@ class _LoginViewState extends State<LoginView> {
         onPressed: () => print("Recuperar pass"),
         child: const Text(
           "¿Has olvidado la contraseña?",
-          style: TextStyle(fontSize: 16, color: Color.fromRGBO(1, 96, 191, 1)),
+          style: TextStyle(fontSize: 16, color: Color.fromRGBO(1, 96, 191, 1), fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -156,87 +157,14 @@ class _LoginViewState extends State<LoginView> {
             "CREAR CUENTA",
             style: TextStyle(
               fontSize: 15,
-              color: Color.fromRGBO(255, 212, 92, 1),
+              color: Color.fromRGBO(1, 96, 191, 1),
               fontWeight: FontWeight.bold,
               decoration: TextDecoration.underline,
+              decorationColor: Color.fromRGBO(1, 96, 191, 1)
             ),
           ),
         ),
       ],
     );
   }
-
-  // --- AVATAR HELPER ACTUALIZADO: ESTRELLA MÁS GRANDE Y ALINEADA ---
-
-  Widget _buildAvatarHelper(String message) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end, // Alinea el bocadillo a la derecha de la columna
-      children: [
-        // 1. El Bocadillo de diálogo (con el pico apuntando a la estrella)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              constraints: const BoxConstraints(maxWidth: 220), // Aumentamos un poco el ancho
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25), // Un poco más redondeado
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Text(
-                message,
-                textAlign: TextAlign.center, // Centramos el texto dentro del bocadillo
-                style: const TextStyle(
-                  color: Color.fromRGBO(1, 96, 191, 1),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            // El triángulo del bocadillo
-            Padding(
-              padding: const EdgeInsets.only(right: 70), // Ajuste del pico para que apunte bien
-              child: CustomPaint(
-                painter: TrianglePainter(Colors.white),
-                child: const SizedBox(width: 20, height: 12),
-              ),
-            ),
-          ],
-        ),
-        
-
-        // 2. La imagen de la estrella (MUCHO MÁS GRANDE)
-        Image.asset(
-          "assets/images/star_image.png",
-          height: 110, // <-- Aumentado a 200 para darle protagonismo
-          width: 110,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.star, size: 120, color: Colors.yellow),
-        ),
-      ],
-    );
-  }
-}
-
-// Clase para dibujar el triángulo del bocadillo
-class TrianglePainter extends CustomPainter {
-  final Color color;
-  TrianglePainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    var paint = Paint()..color = color;
-    var path = Path();
-    path.moveTo(0, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width * 0.7, size.height); // Ajuste del ángulo del pico
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
