@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
 import '../widgets/custom_star_icon.dart';
+import '../controllers/login_controller.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -12,14 +13,55 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _userController = TextEditingController();
   final _passController = TextEditingController();
+  final _loginController = LoginController();
+  bool _isLoading = false;
+  // Para controlar el mensaje de la estrella
+  String? _starMessage;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _userController.dispose();
     _passController.dispose();
     super.dispose();
+  }
+
+  void _handleLogin() async{
+    if (_formKey.currentState!.validate()) {
+      print("DEBUG: Datos validados, procediendo con login...");
+      setState(() {
+        _isLoading = true;
+        _starMessage = "Comprobando tus datos...";
+      });
+
+      // Llamamos al controlador
+      final errorMessage = await _loginController.performLogin(
+        _userController.text,
+        _passController.text,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (errorMessage == null) {
+            _starMessage = "¡Genial! Entrando...";
+            // TODO: Navigator.push a tu pantalla de inicio
+          } else {
+            // La estrella dice el error real (ej: "La contraseña es incorrecta")
+            _starMessage = errorMessage;
+            
+            // Limpiar mensaje tras unos segundos
+            Future.delayed(const Duration(seconds: 4), () {
+              if (mounted) setState(() => _starMessage = null);
+            });
+          }
+        });
+      }
+    } else {
+      print("DEBUG: Validación fallida, mostrando mensaje de error");
+      setState(() => _starMessage = "¡Ups! Revisa que los datos sean correctos");
+    }
   }
 
   @override
@@ -29,42 +71,26 @@ class _LoginViewState extends State<LoginView> {
       body: Stack(
         children: [
           _buildBackground(),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // CONTENEDOR DE ALTURA FIJA PARA EL AVATAR Y BOCADILLO
                     SizedBox(
-                      height: 290, // Aumentamos ligeramente la altura para acomodar la estrella más grande
+                      height: 300,
                       child: Stack(
-                        clipBehavior: Clip.none, // Permite que sobresalga
+                        clipBehavior: Clip.none,
                         children: [
                           Positioned(
-                            bottom: -60,
-                            right: -20,  // Ajuste lateral
-                            child:const AvatarHelper(),
+                            bottom: -100,
+                            right: -20,
+                            child: AvatarHelper(forcedMessage: _starMessage),
                           ),
                         ],
                       ),
                     ),
-
-
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildInputGroup(),
-                          _buildForgotPassword(),
-                          const SizedBox(height: 50),
-                          _buildSubmitButton(),
-                          const SizedBox(height: 5),
-                          _buildSignUpLink(),
-                        ],
-                      ),
-                    ),
+                    Form(key: _formKey, child: _buildMainContainer()),
                   ],
                 ),
               ),
@@ -75,48 +101,70 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // --- MÉTODOS DE CONSTRUCCIÓN ---
-
   Widget _buildBackground() {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage("assets/images/register_background.png"),
           fit: BoxFit.cover,
-          alignment: Alignment.center
+          alignment: Alignment.bottomCenter,
         ),
       ),
     );
   }
 
-  Widget _buildInputGroup() {
+  Widget _buildMainContainer() {
     return Container(
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color.fromRGBO(205, 205, 205, 1), width: 2),
+        color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: const Color.fromRGBO(205, 205, 205, 1),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Punto 1: Menos divisores, solo el central para separar inputs
           CustomAuthInput(
-            controller: _emailController,
-            label: 'Correo electrónico',
-            icon: Icons.email_outlined,
-            validator: (value) => (value == null || !value.contains('@')) ? 'Email no válido' : null,
+            controller: _userController,
+            label: 'Nombre de usuario',
+            icon: Icons.person_outline,
+            validator: (value) => (value == null) ? 'Usuario no válido' : null,
           ),
-          const Divider(
-            color: Color.fromRGBO(60, 60, 60, 1),
-            height: 1,
-            indent: 20,
-            endIndent: 20,
-          ),
+          const Divider(color: Color.fromRGBO(205, 205, 205, 1), height: 1),
           CustomAuthInput(
             controller: _passController,
             label: 'Contraseña',
             icon: Icons.lock_outline,
             isPassword: true,
-            validator: (value) => (value != null && value.length < 6) ? 'Mínimo 6 caracteres' : null,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Contraseña no válida';
+              }
+              return null;
+            },
           ),
+
+          // Punto 2: Orden lógico. Ayuda de contraseña justo tras el input
+          _buildForgotPassword(),
+
+          const SizedBox(height: 30),
+
+          CustomSubmitButton(text: _isLoading ? "Cargando..." : "Iniciar Sesión", onPressed: _isLoading ? () {} : _handleLogin),
+
+          const SizedBox(height: 25),
+
+          _buildSignUpLink(),
         ],
       ),
     );
@@ -127,40 +175,59 @@ class _LoginViewState extends State<LoginView> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () => print("Recuperar pass"),
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(50, 30),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
         child: const Text(
           "¿Has olvidado la contraseña?",
-          style: TextStyle(fontSize: 16, color: Color.fromRGBO(1, 96, 191, 1), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 13,
+            color: Color.fromRGBO(1, 96, 191, 1),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSubmitButton() {
-    return CustomSubmitButton(
-      text: "Iniciar Sesión",
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          print("Iniciar sesión con: ${_emailController.text}");
-        }
-      },
-    );
-  }
-
   Widget _buildSignUpLink() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        const Text("¿Eres nuevo aquí?", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+        const Text(
+          "¿Eres nuevo aquí?",
+          style: TextStyle(
+            color: Color.fromRGBO(60, 60, 60, 1),
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         TextButton(
           onPressed: () => print("Navegar a Registro"),
           child: const Text(
             "CREAR CUENTA",
             style: TextStyle(
               fontSize: 15,
-              color: Color.fromRGBO(1, 96, 191, 1),
               fontWeight: FontWeight.bold,
+              // 1. Ponemos el color del texto base transparente
+              color: Colors.transparent,
+              // 2. Usamos una sombra para dibujar el texto real del color que quieras
+              shadows: [
+                Shadow(
+                  color: Color.fromRGBO(1, 96, 191, 1),
+                  offset: Offset(0, -2), // Elevamos el texto 2px
+                ),
+              ],
+              // 3. El subrayado ahora puede tener su propio color
               decoration: TextDecoration.underline,
-              decorationColor: Color.fromRGBO(1, 96, 191, 1)
+              decorationColor: Color.fromRGBO(
+                1,
+                96,
+                191,
+                1,
+              ), // Naranja para que resalte, o el que prefieras
+              decorationThickness: 2, // Grosor de la línea
             ),
           ),
         ),

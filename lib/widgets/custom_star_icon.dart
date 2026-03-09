@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class AvatarHelper extends StatefulWidget {
   final String starImage;
   final double imageSize;
+  final String? forcedMessage; // Punto 4: Para mostrar errores
 
   const AvatarHelper({
     super.key,
     this.starImage = "assets/images/star_image.png",
-    this.imageSize = 110, // Ajustado a tu medida
+    this.imageSize = 130,
+    this.forcedMessage,
   });
 
   @override
@@ -28,13 +30,12 @@ class _AvatarHelperState extends State<AvatarHelper> {
   @override
   void initState() {
     super.initState();
-    // Es mejor asignar el timer así para asegurar que se limpie bien
     _startTimer();
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (mounted) { // Verificamos que el widget siga en pantalla
+      if (mounted && widget.forcedMessage == null) { 
         setState(() {
           currentIndex = (currentIndex + 1) % messages.length;
         });
@@ -50,8 +51,11 @@ class _AvatarHelperState extends State<AvatarHelper> {
 
   @override
   Widget build(BuildContext context) {
+    // Si hay un mensaje forzado (error), lo mostramos. Si no, el de la lista.
+    final String displayMessage = widget.forcedMessage ?? messages[currentIndex];
+
     return Column(
-      mainAxisSize: MainAxisSize.min, // Importante para no ocupar toda la pantalla
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Column(
@@ -61,28 +65,25 @@ class _AvatarHelperState extends State<AvatarHelper> {
               constraints: const BoxConstraints(maxWidth: 220),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.7),
+                color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9), // Más opaco para leer mejor
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color.fromARGB(255, 33, 159, 255).withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              // Añadimos una transición suave para que el texto no "salte"
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 500),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
                 child: Text(
-                  messages[currentIndex],
-                  key: ValueKey<int>(currentIndex), // Necesario para que AnimatedSwitcher detecte el cambio
+                  displayMessage,
+                  key: ValueKey<String>(displayMessage),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color.fromRGBO(1, 96, 191, 1),
+                  style: TextStyle(
+                    // Si es error (forcedMessage), lo ponemos un pelín más llamativo
+                    color: widget.forcedMessage != null ? Colors.red.shade700 : const Color.fromRGBO(1, 96, 191, 1),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -92,19 +93,19 @@ class _AvatarHelperState extends State<AvatarHelper> {
             Padding(
               padding: const EdgeInsets.only(right: 75),
               child: CustomPaint(
-                painter: _TrianglePainter(const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.7)),
+                painter: _TrianglePainter(const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9)),
                 child: const SizedBox(width: 20, height: 12),
               ),
             ),
           ],
         ),
         Transform.translate(
-          offset: const Offset(0, -30),
+          offset: const Offset(0, -60),
           child: Image.asset(
             widget.starImage,
-            height: 130,
-            width: 130,
-            fit: BoxFit.cover, // Cambiado cover a contain para no cortar la estrella
+            height: 180,
+            width: widget.imageSize,
+            fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => 
                 const Icon(Icons.star, size: 80, color: Colors.yellow),
           ),
@@ -113,11 +114,10 @@ class _AvatarHelperState extends State<AvatarHelper> {
     );
   }
 }
-// Pintor del triángulo
+
 class _TrianglePainter extends CustomPainter {
   final Color color;
   _TrianglePainter(this.color);
-
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()..color = color;
@@ -128,7 +128,6 @@ class _TrianglePainter extends CustomPainter {
     path.close();
     canvas.drawPath(path, paint);
   }
-
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

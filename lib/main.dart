@@ -1,11 +1,26 @@
-import 'package:escuela_valiente_tfg/views/login_view.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'views/login_view.dart';
 
-void main() { runApp(const MyApp()); }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Conexión con Firebase exitosa");
+  } catch (e) {
+    print("Error conectando a Firebase: $e");
+  }
+
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -13,9 +28,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        useMaterial3: true, // Te lo recomiendo para un look moderno
+        useMaterial3: true,
       ),
-      home: LoginView(), 
+      home: const LoginView(), 
     );
   }
 }

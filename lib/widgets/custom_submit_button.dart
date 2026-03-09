@@ -22,7 +22,7 @@ class CustomSubmitButton extends StatelessWidget {
           colors: [
             const Color.fromRGBO(255, 97, 0, 1),
             // ignore: deprecated_member_use
-            const Color.fromRGBO(255, 122, 0, 1).withOpacity(0.7),
+            const Color.fromARGB(255, 255, 148, 48).withOpacity(0.7),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
