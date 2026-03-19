@@ -72,6 +72,10 @@ flutter:
     - assets/icon/icon.png
     - assets/images/star_image.png
     - assets/images/register_background.png
+    - assets/images/lengua_image.png
+    - assets/images/matematicas_image.png
+    - assets/images/ciencias_image.png
+    - assets/images/ingles_image.png
    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

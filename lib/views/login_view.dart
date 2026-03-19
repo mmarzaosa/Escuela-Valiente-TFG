@@ -1,3 +1,4 @@
+import 'package:escuela_valiente_tfg/views/home_view.dart';
 import 'package:flutter/material.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
@@ -19,6 +20,7 @@ class _LoginViewState extends State<LoginView> {
   bool _isLoading = false;
   // Para controlar el mensaje de la estrella
   String? _starMessage;
+  Color _starTextColor = const Color.fromRGBO(1, 96, 191, 1);
 
   @override
   void dispose() {
@@ -27,12 +29,10 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  void _handleLogin() async{
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      print("DEBUG: Datos validados, procediendo con login...");
       setState(() {
         _isLoading = true;
-        _starMessage = "Comprobando tus datos...";
       });
 
       // Llamamos al controlador
@@ -45,22 +45,40 @@ class _LoginViewState extends State<LoginView> {
         setState(() {
           _isLoading = false;
           if (errorMessage == null) {
+            _starTextColor = Colors.green.shade700;
             _starMessage = "¡Genial! Entrando...";
             // TODO: Navigator.push a tu pantalla de inicio
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeView()),
+                  (Route<dynamic> route) => false,
+                );
+              }
+            });
           } else {
             // La estrella dice el error real (ej: "La contraseña es incorrecta")
+            _starTextColor = Colors.red.shade700;
             _starMessage = errorMessage;
-            
+
             // Limpiar mensaje tras unos segundos
             Future.delayed(const Duration(seconds: 4), () {
-              if (mounted) setState(() => _starMessage = null);
+              if (mounted) {
+                setState(() {
+                  _starMessage = null;
+                  _starTextColor = const Color.fromRGBO(1, 96, 191, 1);
+                });
+              }
             });
           }
         });
       }
     } else {
-      print("DEBUG: Validación fallida, mostrando mensaje de error");
-      setState(() => _starMessage = "¡Ups! Revisa que los datos sean correctos");
+      setState(() {
+        _starTextColor = Colors.red.shade700;
+        _starMessage = "¡Up! Revisa que los datos sean correctos.";
+      });
     }
   }
 
@@ -85,7 +103,10 @@ class _LoginViewState extends State<LoginView> {
                           Positioned(
                             bottom: -100,
                             right: -20,
-                            child: AvatarHelper(forcedMessage: _starMessage),
+                            child: AvatarHelper(
+                              forcedMessage: _starMessage,
+                              textColor: _starTextColor,
+                            ),
                           ),
                         ],
                       ),
@@ -160,7 +181,10 @@ class _LoginViewState extends State<LoginView> {
 
           const SizedBox(height: 30),
 
-          CustomSubmitButton(text: _isLoading ? "Cargando..." : "Iniciar Sesión", onPressed: _isLoading ? () {} : _handleLogin),
+          CustomSubmitButton(
+            text: _isLoading ? "Cargando..." : "Iniciar Sesión",
+            onPressed: _isLoading ? () {} : _handleLogin,
+          ),
 
           const SizedBox(height: 25),
 

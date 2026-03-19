@@ -5,12 +5,14 @@ class AvatarHelper extends StatefulWidget {
   final String starImage;
   final double imageSize;
   final String? forcedMessage; // Punto 4: Para mostrar errores
+  final Color? textColor;
 
   const AvatarHelper({
     super.key,
     this.starImage = "assets/images/star_image.png",
     this.imageSize = 130,
     this.forcedMessage,
+    this.textColor,
   });
 
   @override
@@ -83,7 +85,7 @@ class _AvatarHelperState extends State<AvatarHelper> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     // Si es error (forcedMessage), lo ponemos un pelín más llamativo
-                    color: widget.forcedMessage != null ? Colors.red.shade700 : const Color.fromRGBO(1, 96, 191, 1),
+                    color: widget.textColor ?? const Color.fromRGBO(1, 96, 191, 1),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
