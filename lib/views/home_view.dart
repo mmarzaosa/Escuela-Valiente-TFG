@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/custom_star_icon.dart';
+import 'profile_view.dart'; // Asegúrate de que el nombre del archivo sea correcto
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -9,34 +12,62 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 1; // 0: Temario, 1: Inicio, 2: Perfil
+  bool _showStar = false;
+
   final Map<int, String> _navIcons = {
     0: "assets/icon/icon_book_profile_view.png",
     2: "assets/icon/icon_profile_home_view.png",
   };
+
+  @override
+  void initState() {
+    super.initState();
+    Timer(const Duration(seconds: 1), () {
+      if (mounted) setState(() => _showStar = true);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Definimos las pantallas. El contenido original de la Home se mueve a _buildHomeContent
+    final List<Widget> _screens = [
+      const Center(
+        child: Text(
+          "Pantalla Temario",
+          style: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+      ),
+      _buildHomeContent(),
+      const ProfileView(), // Llamada a tu nueva vista de perfil
+    ];
+
     return Scaffold(
       extendBody: true,
       body: Stack(
         children: [
           _buildBackground(),
-          SafeArea(
-            bottom: false,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 150),
-                  _buildContinueCard(),
-                  const SizedBox(height: 30),
-                  _buildExploreSection(),
-                  // Espacio extra para que el scroll permita ver todo antes de la barra
-                  const SizedBox(height: 200),
-                ],
+
+          // Cambiamos el contenido dinámico según el índice seleccionado
+          IndexedStack(index: _selectedIndex, children: _screens),
+
+          // La estrella solo aparece si estamos en la Home (index 1)
+          if (_selectedIndex == 1)
+            Positioned(
+              bottom: -15, // Ajustado para que no la tape la barra
+              right: 18,
+              child: AnimatedOpacity(
+                opacity: _showStar ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 800),
+                child: const AvatarHelper(
+                  imageSize: 140,
+                  customMessages: [
+                    "¿Listo para descubrir algo nuevo hoy?",
+                    "¡Explora los temas y sigue aprendiendo!",
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // --- BARRA DE NAVEGACIÓN PREMIUM POSICIONADA ---
           Positioned(
             bottom: 0,
             left: 0,
@@ -48,13 +79,46 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/images/register_background.png"),
-          fit: BoxFit.cover,
+  // --- NUEVO MÉTODO: Mueve aquí el contenido que antes estaba directo en el body ---
+  Widget _buildHomeContent() {
+    return SafeArea(
+      bottom: false,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            const SizedBox(height: 140),
+            _buildContinueCard(),
+            const SizedBox(height: 15),
+            _buildExploreSection(),
+            const SizedBox(height: 200),
+          ],
         ),
+      ),
+    );
+  }
+
+
+
+  Widget _buildBackground() {
+    String imagePath;
+    switch (_selectedIndex) {
+      case 0:
+        imagePath =
+            "assets/images/register_background.png"; // Fondo para Temario
+        break;
+      case 2:
+        imagePath = "assets/images/profile_background.png"; // Fondo para Perfil
+        break;
+      case 1:
+      default:
+        imagePath =
+            "assets/images/register_background.png"; // Fondo para Inicio (Home)
+        break;
+    }
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
       ),
     );
   }
@@ -96,16 +160,9 @@ class _HomeViewState extends State<HomeView> {
                 gradient: const LinearGradient(
                   colors: [Color(0xFFFF6100), Color(0xFFFF9430)],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: ElevatedButton(
-                onPressed: () => print("Continuando última lección..."),
+                onPressed: () => print("Continuando..."),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -138,7 +195,6 @@ class _HomeViewState extends State<HomeView> {
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1A4D8F),
-            shadows: [Shadow(color: Colors.white, blurRadius: 10)],
           ),
         ),
         const SizedBox(height: 20),
@@ -217,53 +273,48 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildBarraNavegacionPremium() {
-  return SizedBox(
-    height: 150,
-    child: Stack(
-      alignment: Alignment.bottomCenter,
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          height: 100,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(45),
-              topRight: Radius.circular(45),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
+    return SizedBox(
+      height: 150,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            height: 100,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(45),
+                topRight: Radius.circular(45),
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildBotonLateral(label: "Temario", index: 0),
+                const SizedBox(
+                  width: 80,
+                ), // Ajustado para dar espacio al centro
+                _buildBotonLateral(label: "Perfil", index: 2),
+              ],
+            ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // BOTÓN TEMARIO
-              _buildBotonLateral(label: "Temario", index: 0),
-              
-              const SizedBox(width: 0), // Espacio para el botón Inicio
-              
-              // BOTÓN PERFIL
-              _buildBotonLateral(label: "Perfil", index: 2),
-            ],
-          ),
-        ),
-        
-        Positioned(
-          top: 0,
-          child: _buildBotonInicioGigante(),
-        ),
-      ],
-    ),
-  );
-}
+          Positioned(top: 0, child: _buildBotonInicioGigante()),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBotonInicioGigante() {
+    bool isSelected = _selectedIndex == 1;
     return GestureDetector(
       onTap: () => setState(() => _selectedIndex = 1),
       child: Container(
@@ -271,7 +322,10 @@ class _HomeViewState extends State<HomeView> {
         height: 110,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 7),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFFF9430) : Colors.white,
+            width: 6,
+          ),
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -305,51 +359,52 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildBotonLateral({required String label, required int index}) {
-  bool isSelected = _selectedIndex == index;
-  String? imagePath = _navIcons[index]; // Obtenemos el path según el index
+    bool isSelected = _selectedIndex == index;
+    String? imagePath = _navIcons[index];
 
-  return GestureDetector(
-    onTap: () => setState(() => _selectedIndex = index),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFFF9430) ,
-          ),
-          child: CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.white, // Un fondo por si la imagen tiene transparencias
-            child: ClipOval(
-              child: Transform.scale(
-                scale: 1.8,
-                child: Transform.translate(
-                  offset: const Offset(0, 3),
-                  child: Image.asset(
-                    imagePath ?? "", // Si no hay path, no explota
-                    fit: BoxFit.cover,
-                    width: 60,
-                    height: 60,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.error), // Por si acaso
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected ? const Color(0xFFFF9430) : Colors.transparent,
+            ),
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.white,
+              child: ClipOval(
+                child: Transform.scale(
+                  scale: 1.8,
+                  child: Transform.translate(
+                    offset: const Offset(0, 3),
+                    child: Image.asset(
+                      imagePath ?? "",
+                      fit: BoxFit.cover,
+                      width: 60,
+                      height: 60,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? const Color(0xFFFF9430) : const Color(0xFF1A4D8F),
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFFFF9430)
+                  : const Color(0xFF1A4D8F),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }

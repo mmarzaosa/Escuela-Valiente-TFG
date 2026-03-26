@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 class AvatarHelper extends StatefulWidget {
   final String starImage;
   final double imageSize;
-  final String? forcedMessage; // Punto 4: Para mostrar errores
+  final String? forcedMessage; 
   final Color? textColor;
+  final List<String>? customMessages; 
 
   const AvatarHelper({
     super.key,
@@ -13,6 +14,7 @@ class AvatarHelper extends StatefulWidget {
     this.imageSize = 130,
     this.forcedMessage,
     this.textColor,
+    this.customMessages,
   });
 
   @override
@@ -20,7 +22,7 @@ class AvatarHelper extends StatefulWidget {
 }
 
 class _AvatarHelperState extends State<AvatarHelper> {
-  final List<String> messages = [
+  final List<String> defaultMessages = [
     "¡BIENVENIDO a Escuela Valiente!",
     "¿Estamos listos para aprender?",
     "Inicia sesión para continuar",
@@ -39,7 +41,8 @@ class _AvatarHelperState extends State<AvatarHelper> {
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (mounted && widget.forcedMessage == null) { 
         setState(() {
-          currentIndex = (currentIndex + 1) % messages.length;
+          final listToUse = widget.customMessages ?? defaultMessages;
+          currentIndex = (currentIndex + 1) % listToUse.length;
         });
       }
     });
@@ -53,8 +56,11 @@ class _AvatarHelperState extends State<AvatarHelper> {
 
   @override
   Widget build(BuildContext context) {
-    // Si hay un mensaje forzado (error), lo mostramos. Si no, el de la lista.
-    final String displayMessage = widget.forcedMessage ?? messages[currentIndex];
+    // Decidimos qué lista de mensajes utilizar
+    final List<String> currentList = widget.customMessages ?? defaultMessages;
+    
+    // Si hay un mensaje forzado (error), lo mostramos. Si no, el de la lista actual.
+    final String displayMessage = widget.forcedMessage ?? currentList[currentIndex];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -67,7 +73,7 @@ class _AvatarHelperState extends State<AvatarHelper> {
               constraints: const BoxConstraints(maxWidth: 220),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9), // Más opaco para leer mejor
+                color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
@@ -84,7 +90,6 @@ class _AvatarHelperState extends State<AvatarHelper> {
                   key: ValueKey<String>(displayMessage),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    // Si es error (forcedMessage), lo ponemos un pelín más llamativo
                     color: widget.textColor ?? const Color.fromRGBO(1, 96, 191, 1),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

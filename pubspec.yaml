@@ -78,6 +78,9 @@ flutter:
     - assets/images/ingles_image.png
     - assets/icon/icon_profile_home_view.png
     - assets/icon/icon_book_profile_view.png
+    - assets/images/star_learn.png
+    - assets/images/profile_background.png
+    - assets/icon/icon_profile_boy.png
    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
