@@ -18,7 +18,6 @@ class _LoginViewState extends State<LoginView> {
   final _passController = TextEditingController();
   final _loginController = LoginController();
   bool _isLoading = false;
-  // Para controlar el mensaje de la estrella
   String? _starMessage;
   Color _starTextColor = const Color.fromRGBO(1, 96, 191, 1);
 
@@ -35,7 +34,6 @@ class _LoginViewState extends State<LoginView> {
         _isLoading = true;
       });
 
-      // Llamamos al controlador
       final errorMessage = await _loginController.performLogin(
         _userController.text,
         _passController.text,
@@ -47,7 +45,6 @@ class _LoginViewState extends State<LoginView> {
           if (errorMessage == null) {
             _starTextColor = Colors.green.shade700;
             _starMessage = "¡Genial! Entrando...";
-            // TODO: Navigator.push a tu pantalla de inicio
             Future.delayed(const Duration(milliseconds: 1500), () {
               if (mounted) {
                 Navigator.pushAndRemoveUntil(
@@ -58,11 +55,9 @@ class _LoginViewState extends State<LoginView> {
               }
             });
           } else {
-            // La estrella dice el error real (ej: "La contraseña es incorrecta")
             _starTextColor = Colors.red.shade700;
             _starMessage = errorMessage;
 
-            // Limpiar mensaje tras unos segundos
             Future.delayed(const Duration(seconds: 4), () {
               if (mounted) {
                 setState(() {
@@ -155,7 +150,6 @@ class _LoginViewState extends State<LoginView> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Punto 1: Menos divisores, solo el central para separar inputs
           CustomAuthInput(
             controller: _userController,
             label: 'Nombre de usuario',
@@ -176,7 +170,6 @@ class _LoginViewState extends State<LoginView> {
             },
           ),
 
-          // Punto 2: Orden lógico. Ayuda de contraseña justo tras el input
           _buildForgotPassword(),
 
           const SizedBox(height: 30),
@@ -234,24 +227,21 @@ class _LoginViewState extends State<LoginView> {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              // 1. Ponemos el color del texto base transparente
               color: Colors.transparent,
-              // 2. Usamos una sombra para dibujar el texto real del color que quieras
               shadows: [
                 Shadow(
                   color: Color.fromRGBO(1, 96, 191, 1),
-                  offset: Offset(0, -2), // Elevamos el texto 2px
+                  offset: Offset(0, -2),
                 ),
               ],
-              // 3. El subrayado ahora puede tener su propio color
               decoration: TextDecoration.underline,
               decorationColor: Color.fromRGBO(
                 1,
                 96,
                 191,
                 1,
-              ), // Naranja para que resalte, o el que prefieras
-              decorationThickness: 2, // Grosor de la línea
+              ),
+              decorationThickness: 2,
             ),
           ),
         ),

@@ -9,7 +9,7 @@ class CustomSubmitButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
-    this.width = 270, // Valor por defecto que ya tenías
+    this.width = 270, 
   });
 
   @override
@@ -21,7 +21,6 @@ class CustomSubmitButton extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             const Color.fromRGBO(255, 97, 0, 1),
-            // ignore: deprecated_member_use
             const Color.fromARGB(255, 255, 148, 48).withOpacity(0.7),
           ],
           begin: Alignment.centerLeft,

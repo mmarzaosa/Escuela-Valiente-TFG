@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../widgets/custom_star_icon.dart';
-import 'profile_view.dart'; // Asegúrate de que el nombre del archivo sea correcto
+import 'profile_view.dart'; 
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -11,7 +11,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _selectedIndex = 1; // 0: Temario, 1: Inicio, 2: Perfil
+  int _selectedIndex = 1; 
   bool _showStar = false;
 
   final Map<int, String> _navIcons = {
@@ -29,7 +29,6 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    // Definimos las pantallas. El contenido original de la Home se mueve a _buildHomeContent
     final List<Widget> _screens = [
       const Center(
         child: Text(
@@ -38,7 +37,7 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
       _buildHomeContent(),
-      const ProfileView(), // Llamada a tu nueva vista de perfil
+      const ProfileView(), 
     ];
 
     return Scaffold(
@@ -47,13 +46,11 @@ class _HomeViewState extends State<HomeView> {
         children: [
           _buildBackground(),
 
-          // Cambiamos el contenido dinámico según el índice seleccionado
           IndexedStack(index: _selectedIndex, children: _screens),
 
-          // La estrella solo aparece si estamos en la Home (index 1)
           if (_selectedIndex == 1)
             Positioned(
-              bottom: -15, // Ajustado para que no la tape la barra
+              bottom: -15,
               right: 18,
               child: AnimatedOpacity(
                 opacity: _showStar ? 1.0 : 0.0,
@@ -79,7 +76,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // --- NUEVO MÉTODO: Mueve aquí el contenido que antes estaba directo en el body ---
   Widget _buildHomeContent() {
     return SafeArea(
       bottom: false,
@@ -105,15 +101,15 @@ class _HomeViewState extends State<HomeView> {
     switch (_selectedIndex) {
       case 0:
         imagePath =
-            "assets/images/register_background.png"; // Fondo para Temario
+            "assets/images/register_background.png"; 
         break;
       case 2:
-        imagePath = "assets/images/profile_background.png"; // Fondo para Perfil
+        imagePath = "assets/images/profile_background.png"; 
         break;
       case 1:
       default:
         imagePath =
-            "assets/images/register_background.png"; // Fondo para Inicio (Home)
+            "assets/images/register_background.png"; 
         break;
     }
     return Container(
@@ -302,7 +298,7 @@ class _HomeViewState extends State<HomeView> {
                 _buildBotonLateral(label: "Temario", index: 0),
                 const SizedBox(
                   width: 80,
-                ), // Ajustado para dar espacio al centro
+                ), 
                 _buildBotonLateral(label: "Perfil", index: 2),
               ],
             ),

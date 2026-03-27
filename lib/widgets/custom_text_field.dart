@@ -21,13 +21,11 @@ class CustomAuthInput extends StatefulWidget {
 }
 
 class _CustomAuthInputState extends State<CustomAuthInput> {
-  // Variable interna para controlar la visibilidad
   late bool _obscureText;
 
   @override
   void initState() {
     super.initState();
-    // Inicializamos con el valor que venga del widget (true si es password)
     _obscureText = widget.isPassword;
   }
 
@@ -39,14 +37,12 @@ Widget build(BuildContext context) {
     style: const TextStyle(color: Color.fromRGBO(60, 60, 60, 1)),
     validator: widget.validator,
     decoration: InputDecoration(
-      // 1. Usamos hintText en lugar de labelText
       hintText: widget.label, 
       hintStyle: const TextStyle(
-        color: Color.fromRGBO(60, 60, 60, 0.5), // Un poco más claro para que parezca una sugerencia
+        color: Color.fromRGBO(60, 60, 60, 0.5),
         fontWeight: FontWeight.bold,
       ),
       
-      // 2. IMPORTANTE: Esto evita que el label intente flotar si existiera
       floatingLabelBehavior: FloatingLabelBehavior.never, 
       
       prefixIcon: Icon(widget.icon, color: const Color.fromRGBO(60, 60, 60, 1)),
@@ -62,8 +58,6 @@ Widget build(BuildContext context) {
         : null,
         
       border: InputBorder.none,
-      // Ajustamos un poco el padding vertical para que el texto escrito 
-      // y el hint queden perfectamente alineados al centro.
       contentPadding: const EdgeInsets.symmetric(vertical: 20),
       
       errorStyle: const TextStyle(height: 0, color: Colors.transparent),

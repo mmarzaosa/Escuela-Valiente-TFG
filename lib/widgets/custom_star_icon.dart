@@ -56,10 +56,8 @@ class _AvatarHelperState extends State<AvatarHelper> {
 
   @override
   Widget build(BuildContext context) {
-    // Decidimos qué lista de mensajes utilizar
     final List<String> currentList = widget.customMessages ?? defaultMessages;
     
-    // Si hay un mensaje forzado (error), lo mostramos. Si no, el de la lista actual.
     final String displayMessage = widget.forcedMessage ?? currentList[currentIndex];
 
     return Column(

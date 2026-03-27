@@ -23,7 +23,7 @@ class ProfileView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 38,
                     fontWeight:
-                        FontWeight.w400, // Más grosor para toque infantil
+                        FontWeight.w400, 
                     color: const Color(0xFF1A4D8F),
                     shadows: [
                       Shadow(
@@ -35,7 +35,6 @@ class ProfileView extends StatelessWidget {
                   ),
                 ),
 
-                // 1. EL FONDO (Borde naranja grueso)
                 const SizedBox(height: 5),
 
                 Container(
@@ -54,7 +53,7 @@ class ProfileView extends StatelessWidget {
                       offset: const Offset(
                         0,
                         14,
-                      ), // El primer número es X (izq/der), el segundo es Y (arriba/abajo)
+                      ),
                       child: Transform.scale(
                         scale: 1.8,
                         child: Image.asset(
@@ -68,17 +67,16 @@ class ProfileView extends StatelessWidget {
 
                 const SizedBox(height: 5),
 
-                // NOMBRE
                 Row(
                   mainAxisSize:
-                      MainAxisSize.min, // Centra el conjunto en la pantalla
+                      MainAxisSize.min, 
                   children: [
                     const Text(
                       "Marc",
                       style: TextStyle(
                         fontSize: 38,
                         fontWeight:
-                            FontWeight.w400, // Más grosor para toque infantil
+                            FontWeight.w400,
                         color: Color(0xFF1A4D8F),
                         letterSpacing: 1.2,
                         shadows: [
@@ -91,7 +89,6 @@ class ProfileView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    // Icono de rayo con degradado naranja
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
                         colors: [Color(0xFFFF9430), Color(0xFFFF6100)],
@@ -101,7 +98,7 @@ class ProfileView extends StatelessWidget {
                       child: const Icon(
                         Icons.emoji_events_rounded,
                         color: Colors
-                            .white, // Color base para que aplique el ShaderMask
+                            .white, 
                         size: 34,
                       ),
                     ),
@@ -110,19 +107,16 @@ class ProfileView extends StatelessWidget {
 
                 const SizedBox(height: 5),
 
-                // PACK DE PROGRESO
                 _buildPackContainer(
                   child: _buildProgressContent(orangeMain, darkBlue),
                 ),
 
                 const SizedBox(height: 20),
 
-                // PACK DE AJUSTES
                 _buildPackContainer(
                   child: _buildMenuContent(darkBlue, orangeMain),
                 ),
 
-                // Espacio para la barra de navegación
                 const SizedBox(height: 100),
               ],
             ),
@@ -132,7 +126,6 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  // --- MÉTODOS DE APOYO ---
 
   Widget _buildBackground() {
     return Container(
@@ -142,7 +135,7 @@ class ProfileView extends StatelessWidget {
         image: DecorationImage(
           image: AssetImage(
             "assets/images/profile_background.png",
-          ), // Usamos tu path de fondo
+          ), 
           fit: BoxFit.cover,
         ),
       ),
