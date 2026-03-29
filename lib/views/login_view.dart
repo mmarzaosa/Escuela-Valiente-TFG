@@ -1,9 +1,15 @@
-import 'package:escuela_valiente_tfg/views/home_view.dart';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
 import '../widgets/custom_star_icon.dart';
 import '../controllers/login_controller.dart';
+import 'register_view.dart';
+import 'home_view.dart';
+import '../widgets/app_background.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+import '../theme/app_texts.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -17,9 +23,16 @@ class _LoginViewState extends State<LoginView> {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   final _loginController = LoginController();
+
   bool _isLoading = false;
   String? _starMessage;
-  Color _starTextColor = const Color.fromRGBO(1, 96, 191, 1);
+  Color _starTextColor = AppColors.darkBlue; 
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConnectivity();
+  }
 
   @override
   void dispose() {
@@ -30,9 +43,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
       final errorMessage = await _loginController.performLogin(
         _userController.text,
@@ -42,39 +53,93 @@ class _LoginViewState extends State<LoginView> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          if (errorMessage == null) {
-            _starTextColor = Colors.green.shade700;
-            _starMessage = "¡Genial! Entrando...";
-            Future.delayed(const Duration(milliseconds: 1500), () {
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeView()),
-                  (Route<dynamic> route) => false,
-                );
-              }
-            });
-          } else {
-            _starTextColor = Colors.red.shade700;
-            _starMessage = errorMessage;
 
-            Future.delayed(const Duration(seconds: 4), () {
-              if (mounted) {
-                setState(() {
-                  _starMessage = null;
-                  _starTextColor = const Color.fromRGBO(1, 96, 191, 1);
-                });
-              }
-            });
+          if (errorMessage == null) {
+            _starTextColor = AppColors.successGreen;
+            _starMessage = AppTexts.getText('perfect_enter');
+            _navigateToHome(isGuest: false);
+          } else if (errorMessage.contains("network-request-failed") ||
+              errorMessage.contains("offline")) {
+            // --- CASO 2: SIN INTERNET ---
+            _starTextColor = AppColors.orangeMain;
+            _starMessage =
+                AppTexts.getText('login_offline_star');
+
+            // Mostramos un pequeño aviso o diálogo para entrar offline
+            _showOfflineOption();
+          } else {
+            // --- CASO 3: ERROR DE DATOS (User/Pass mal) ---
+            _starTextColor = AppColors.errorRed;
+            _starMessage = errorMessage;
+            _resetStarMessage(4);
           }
         });
       }
     } else {
       setState(() {
-        _starTextColor = Colors.red.shade700;
-        _starMessage = "¡Up! Revisa que los datos sean correctos.";
+        _starTextColor = AppColors.errorRed;
+        _starMessage = AppTexts.getText('login_error');
       });
     }
+  }
+
+  // Función auxiliar para limpiar el mensaje de la estrella
+  void _resetStarMessage(int seconds) {
+    Future.delayed(Duration(seconds: seconds), () {
+      if (mounted) {
+        setState(() {
+          _starMessage = null;
+          _starTextColor = AppColors.darkBlue;
+        });
+      }
+    });
+  }
+
+  // Función para navegar (centralizada)
+  void _navigateToHome({required bool isGuest}) {
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => HomeView(isGuest: isGuest)),
+          (route) => false,
+        );
+      }
+    });
+  }
+
+  void _showOfflineOption() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(AppTexts.getText('mode_offline'), textAlign: TextAlign.center),
+        content: Text(
+          AppTexts.getText('no_conection_to_school'),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              AppTexts.getText('btn_retry'),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.orangeMain,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Cerramos diálogo
+              _navigateToHome(isGuest: true); // Entramos como invitado
+            },
+            child: Text(AppTexts.getText('btn_guest')),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -83,29 +148,14 @@ class _LoginViewState extends State<LoginView> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          _buildBackground(),
+          AppBackground(),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    SizedBox(
-                      height: 300,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            bottom: -100,
-                            right: -20,
-                            child: AvatarHelper(
-                              forcedMessage: _starMessage,
-                              textColor: _starTextColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildStarHeader(),
                     Form(key: _formKey, child: _buildMainContainer()),
                   ],
                 ),
@@ -117,14 +167,21 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  Widget _buildBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/images/register_background.png"),
-          fit: BoxFit.cover,
-          alignment: Alignment.bottomCenter,
-        ),
+  Widget _buildStarHeader() {
+    return SizedBox(
+      height: 300,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            bottom: -100,
+            right: -20,
+            child: AvatarHelper(
+              forcedMessage: _starMessage,
+              textColor: _starTextColor,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -133,10 +190,15 @@ class _LoginViewState extends State<LoginView> {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9),
+        color: AppColors.backgroundCreme.withOpacity(0.9),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: const Color.fromRGBO(205, 205, 205, 1),
+          color: const Color.fromRGBO(
+            205,
+            205,
+            205,
+            1,
+          ),
           width: 2,
         ),
         boxShadow: [
@@ -152,22 +214,20 @@ class _LoginViewState extends State<LoginView> {
         children: [
           CustomAuthInput(
             controller: _userController,
-            label: 'Nombre de usuario',
+            label: AppTexts.getText('username'),
             icon: Icons.person_outline,
-            validator: (value) => (value == null) ? 'Usuario no válido' : null,
+            validator: (value) =>
+                (value == null || value.isEmpty) ? AppTexts.getText('no_valid_user') : null,
           ),
           const Divider(color: Color.fromRGBO(205, 205, 205, 1), height: 1),
           CustomAuthInput(
             controller: _passController,
-            label: 'Contraseña',
+            label: AppTexts.getText('password'),
             icon: Icons.lock_outline,
             isPassword: true,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Contraseña no válida';
-              }
-              return null;
-            },
+            validator: (value) => (value == null || value.isEmpty)
+                ? AppTexts.getText('no_valid_pass')
+                : null,
           ),
 
           _buildForgotPassword(),
@@ -175,7 +235,7 @@ class _LoginViewState extends State<LoginView> {
           const SizedBox(height: 30),
 
           CustomSubmitButton(
-            text: _isLoading ? "Cargando..." : "Iniciar Sesión",
+            text: _isLoading ? AppTexts.getText('loading') : AppTexts.getText('session'),
             onPressed: _isLoading ? () {} : _handleLogin,
           ),
 
@@ -197,11 +257,11 @@ class _LoginViewState extends State<LoginView> {
           minimumSize: const Size(50, 30),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child: const Text(
-          "¿Has olvidado la contraseña?",
-          style: TextStyle(
+        child:  Text(
+          AppTexts.getText('forgot_password'),
+          style: const TextStyle(
             fontSize: 13,
-            color: Color.fromRGBO(1, 96, 191, 1),
+            color: AppColors.darkBlue,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -212,40 +272,72 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildSignUpLink() {
     return Column(
       children: [
-        const Text(
-          "¿Eres nuevo aquí?",
-          style: TextStyle(
-            color: Color.fromRGBO(60, 60, 60, 1),
+        Text(
+          AppTexts.getText('new_user'),
+          style: const TextStyle(
+            color: AppColors.textDark,
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
         ),
         TextButton(
-          onPressed: () => print("Navegar a Registro"),
-          child: const Text(
-            "CREAR CUENTA",
-            style: TextStyle(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const RegisterView()),
+            );
+          },
+          child: Text(
+            AppTexts.getText('create_account'),
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.transparent,
               shadows: [
-                Shadow(
-                  color: Color.fromRGBO(1, 96, 191, 1),
-                  offset: Offset(0, -2),
-                ),
+                Shadow(color: AppColors.darkBlue, offset: Offset(0, -2)),
               ],
               decoration: TextDecoration.underline,
-              decorationColor: Color.fromRGBO(
-                1,
-                96,
-                191,
-                1,
-              ),
+              decorationColor: AppColors.darkBlue,
               decorationThickness: 2,
             ),
           ),
         ),
       ],
     );
+  }
+
+  void _checkConnectivity() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isEmpty || result[0].rawAddress.isEmpty) {
+        throw const SocketException("No hay red");
+      }
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeView(isGuest: false),
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _starMessage = AppTexts.getText('login_welcome');
+        });
+      }
+    } on SocketException catch (_) {
+      if (mounted) {
+        setState(() {
+          _starMessage = AppTexts.getText('offline_title');
+          _starTextColor = AppColors.orangeMain;
+        });
+        _showOfflineOption(); 
+      }
+    }
   }
 }

@@ -1,17 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_ui_constants.dart';
 import '../widgets/custom_star_icon.dart';
-import 'profile_view.dart'; 
+import 'profile_view.dart';
+import '../theme/app_texts.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  final bool isGuest; 
+  const HomeView({super.key, this.isGuest=false});
 
   @override
   State<HomeView> createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _selectedIndex = 1; 
+  int _selectedIndex = 1;
   bool _showStar = false;
 
   final Map<int, String> _navIcons = {
@@ -22,6 +26,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    print("¿Es invitado? ${widget.isGuest}");
     Timer(const Duration(seconds: 1), () {
       if (mounted) setState(() => _showStar = true);
     });
@@ -33,11 +38,11 @@ class _HomeViewState extends State<HomeView> {
       const Center(
         child: Text(
           "Pantalla Temario",
-          style: TextStyle(color: Colors.white, fontSize: 20),
+          style: TextStyle(color: AppColors.textLight, fontSize: 20),
         ),
       ),
       _buildHomeContent(),
-      const ProfileView(), 
+      const ProfileView(),
     ];
 
     return Scaffold(
@@ -48,22 +53,7 @@ class _HomeViewState extends State<HomeView> {
 
           IndexedStack(index: _selectedIndex, children: _screens),
 
-          if (_selectedIndex == 1)
-            Positioned(
-              bottom: -15,
-              right: 18,
-              child: AnimatedOpacity(
-                opacity: _showStar ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 800),
-                child: const AvatarHelper(
-                  imageSize: 140,
-                  customMessages: [
-                    "¿Listo para descubrir algo nuevo hoy?",
-                    "¡Explora los temas y sigue aprendiendo!",
-                  ],
-                ),
-              ),
-            ),
+          if (_selectedIndex == 1) _buildFloatingHelper(),
 
           Positioned(
             bottom: 0,
@@ -75,6 +65,7 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
+
 
   Widget _buildHomeContent() {
     return SafeArea(
@@ -94,22 +85,36 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-
+  Widget _buildFloatingHelper() {
+    return Positioned(
+      bottom: -15,
+      right: 18,
+      child: AnimatedOpacity(
+        opacity: _showStar ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 800),
+        child: AvatarHelper(
+          imageSize: 140,
+          customMessages: [
+            AppTexts.getText('ready_discover_something_new'),
+            AppTexts.getText('explore_syllabus_continue'),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildBackground() {
     String imagePath;
     switch (_selectedIndex) {
       case 0:
-        imagePath =
-            "assets/images/register_background.png"; 
+        imagePath = "assets/images/register_background.png";
         break;
       case 2:
-        imagePath = "assets/images/profile_background.png"; 
+        imagePath = "assets/images/profile_background.png";
         break;
       case 1:
       default:
-        imagePath =
-            "assets/images/register_background.png"; 
+        imagePath = "assets/images/register_background.png";
         break;
     }
     return Container(
@@ -119,15 +124,16 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+
   Widget _buildContinueCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color.fromRGBO(255, 247, 238, 0.9),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white, width: 2),
+          color: AppColors.backgroundCreme.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(AppUI.borderRadiusLarge),
+          border: Border.all(color: AppColors.textLight, width: 2),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -138,45 +144,49 @@ class _HomeViewState extends State<HomeView> {
         ),
         child: Column(
           children: [
-            const Text(
-              "¡Hola! ¿Qué quieres aprender hoy?",
+            Text(
+              AppTexts.getText('hello_what_want_learn'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A4D8F),
+                color: AppColors.darkBlue,
               ),
             ),
             const SizedBox(height: 15),
-            Container(
-              width: double.infinity,
-              height: 55,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6100), Color(0xFFFF9430)],
-                ),
-              ),
-              child: ElevatedButton(
-                onPressed: () => print("Continuando..."),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
-                child: const Text(
-                  "Continuar Aprendiendo",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            _buildContinueButton(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinueButton() {
+    return Container(
+      width: double.infinity,
+      height: 55,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        gradient: const LinearGradient(
+          colors: [AppColors.orangeGradientEnd, AppColors.orangeMain],
+        ),
+      ),
+      child: ElevatedButton(
+        onPressed: () => print("Continuando..."),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        child: Text(
+          AppTexts.getText('continue_learning'),
+          style: const TextStyle(
+            color: AppColors.textLight,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -185,12 +195,12 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildExploreSection() {
     return Column(
       children: [
-        const Text(
-          "Explorar Temas",
-          style: TextStyle(
+        Text(
+          AppTexts.getText('explore_syllabus'),
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1A4D8F),
+            color: AppColors.darkBlue,
           ),
         ),
         const SizedBox(height: 20),
@@ -200,26 +210,10 @@ class _HomeViewState extends State<HomeView> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
-              _buildThemeCard(
-                "Ciencias",
-                "assets/images/ciencias_image.png",
-                Colors.cyan.shade500,
-              ),
-              _buildThemeCard(
-                "Lengua",
-                "assets/images/lengua_image.png",
-                Colors.orange.shade50,
-              ),
-              _buildThemeCard(
-                "Mates",
-                "assets/images/matematicas_image.png",
-                Colors.green.shade50,
-              ),
-              _buildThemeCard(
-                "Inglés",
-                "assets/images/ingles_image.png",
-                Colors.blue.shade50,
-              ),
+              _buildThemeCard(AppTexts.getText('science'), "assets/images/ciencias_image.png"),
+              _buildThemeCard(AppTexts.getText('lenguage'), "assets/images/lengua_image.png"),
+              _buildThemeCard(AppTexts.getText('math'), "assets/images/matematicas_image.png"),
+              _buildThemeCard(AppTexts.getText('english'), "assets/images/ingles_image.png"),
             ],
           ),
         ),
@@ -227,16 +221,16 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildThemeCard(String title, String imagePath, Color bgColor) {
+  Widget _buildThemeCard(String title, String imagePath) {
     return Container(
       width: 170,
       margin: const EdgeInsets.only(right: 15, bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.textLight,
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withOpacity(0.15), 
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -250,23 +244,21 @@ class _HomeViewState extends State<HomeView> {
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
-              color: Color(0xFFFF9430),
+              color: AppColors.orangeMain,
             ),
           ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(10.0),
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                width: double.infinity,
-              ),
+              child: Image.asset(imagePath, fit: BoxFit.cover, width: double.infinity),
             ),
           ),
         ],
       ),
     );
   }
+
+  // --- NAVEGACIÓN ---
 
   Widget _buildBarraNavegacionPremium() {
     return SizedBox(
@@ -275,6 +267,7 @@ class _HomeViewState extends State<HomeView> {
         alignment: Alignment.bottomCenter,
         clipBehavior: Clip.none,
         children: [
+          // Fondo de la barra
           Container(
             height: 100,
             width: double.infinity,
@@ -295,14 +288,13 @@ class _HomeViewState extends State<HomeView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildBotonLateral(label: "Temario", index: 0),
-                const SizedBox(
-                  width: 80,
-                ), 
-                _buildBotonLateral(label: "Perfil", index: 2),
+                _buildBotonLateral(label: AppTexts.getText('syllabus'), index: 0),
+                const SizedBox(width: 80),
+                _buildBotonLateral(label: AppTexts.getText('profile'), index: 2),
               ],
             ),
           ),
+          // Botón central flotante
           Positioned(top: 0, child: _buildBotonInicioGigante()),
         ],
       ),
@@ -319,31 +311,31 @@ class _HomeViewState extends State<HomeView> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? const Color(0xFFFF9430) : Colors.white,
+            color: isSelected ? AppColors.orangeMain : AppColors.textLight,
             width: 6,
           ),
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFFF9430), Color(0xFFFF6100)],
+            colors: [AppColors.orangeMain, AppColors.orangeGradientEnd],
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF9430).withOpacity(0.4),
+              color: AppColors.orangeMain.withOpacity(0.4),
               blurRadius: 15,
               spreadRadius: 2,
               offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.home_rounded, color: Colors.white, size: 50),
+            const Icon(Icons.home_rounded, color: AppColors.textLight, size: 50),
             Text(
-              "Inicio",
-              style: TextStyle(
-                color: Colors.white,
+              AppTexts.getText('home'),
+              style: const TextStyle(
+                color: AppColors.textLight,
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
               ),
@@ -367,11 +359,11 @@ class _HomeViewState extends State<HomeView> {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isSelected ? const Color(0xFFFF9430) : Colors.transparent,
+              color: isSelected ? AppColors.orangeMain : Colors.transparent,
             ),
             child: CircleAvatar(
               radius: 30,
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.textLight,
               child: ClipOval(
                 child: Transform.scale(
                   scale: 1.8,
@@ -392,9 +384,7 @@ class _HomeViewState extends State<HomeView> {
           Text(
             label,
             style: TextStyle(
-              color: isSelected
-                  ? const Color(0xFFFF9430)
-                  : const Color(0xFF1A4D8F),
+              color: isSelected ? AppColors.orangeMain : AppColors.darkBlue,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),

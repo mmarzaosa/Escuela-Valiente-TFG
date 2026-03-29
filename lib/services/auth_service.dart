@@ -35,4 +35,8 @@ class AuthService {
         return "Algo ha salido mal. ¡Inténtalo de nuevo!";
     }
   }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 }

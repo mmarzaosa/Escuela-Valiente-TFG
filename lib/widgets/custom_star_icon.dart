@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:escuela_valiente_tfg/theme/app_texts.dart';
 import 'package:flutter/material.dart';
 
 class AvatarHelper extends StatefulWidget {
@@ -23,9 +24,10 @@ class AvatarHelper extends StatefulWidget {
 
 class _AvatarHelperState extends State<AvatarHelper> {
   final List<String> defaultMessages = [
-    "¡BIENVENIDO a Escuela Valiente!",
-    "¿Estamos listos para aprender?",
-    "Inicia sesión para continuar",
+    AppTexts.getText('welcome'),
+    AppTexts.getText('lulu_welcome'),
+    AppTexts.getText('ready_learn'),
+    AppTexts.getText('login_prompt'),
   ];
 
   int currentIndex = 0;
