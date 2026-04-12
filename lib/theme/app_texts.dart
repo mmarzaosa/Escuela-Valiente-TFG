@@ -62,6 +62,9 @@ class AppTexts {
       'ready_learn': '¿Estamos listos para aprender?.',
       'login_prompt': 'Inicia sesión para continuar',
       'home': 'Inicio',
+      'loading_adventure': 'Cargando aventura...',
+      'error_name_exists': '¡Ups! El nombre de usuario ya existe. Por favor, elige otro.',
+      'error_weak_pass': '¡Ups! La contraseña es demasiado débil. Por favor, elige una contraseña más segura.',
     },
     'en': {
       'login_welcome': 'Hi! I am Lumi. Enter your details to start!',
@@ -121,6 +124,9 @@ class AppTexts {
       'ready_learn': 'Are we ready to learn?.',
       'login_prompt': 'Log in to continue',
       'home': 'Home',
+      'loading_adventure': 'Loading adventure...',
+      'error_name_exists': 'Oops! Username already exists. Please choose another one.',
+      'error_weak_pass': 'Oops! The password is too weak. Please choose a stronger password.',
     },
     'ca': {
       'login_welcome': 'Hola! Soc la Lumi. Introdueix les dades per començar!',
@@ -180,6 +186,9 @@ class AppTexts {
       'ready_learn': 'Estem preparats per aprendre?.',
       'login_prompt': 'Inicia sessió per continuar',
       'home': 'Inici',
+      'loading_adventure': 'Carregant aventura...',
+      'error_name_exists': 'Ups! El nom d\'usuari ja existeix. Por favor, elige otro.',
+      'error_weak_pass': 'Ups! La contrasenya es demasiado débil. Por favor, elige una contraseña más segura.',
 
     },
   };

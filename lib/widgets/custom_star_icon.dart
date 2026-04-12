@@ -25,7 +25,7 @@ class AvatarHelper extends StatefulWidget {
 class _AvatarHelperState extends State<AvatarHelper> {
   final List<String> defaultMessages = [
     AppTexts.getText('welcome'),
-    AppTexts.getText('lulu_welcome'),
+    AppTexts.getText('login_welcome'),
     AppTexts.getText('ready_learn'),
     AppTexts.getText('login_prompt'),
   ];
@@ -41,13 +41,13 @@ class _AvatarHelperState extends State<AvatarHelper> {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (mounted && widget.forcedMessage == null) { 
-        setState(() {
-          final listToUse = widget.customMessages ?? defaultMessages;
-          currentIndex = (currentIndex + 1) % listToUse.length;
-        });
-      }
-    });
+    if (mounted && widget.forcedMessage == null) { 
+      setState(() {
+        final listToUse = widget.customMessages ?? defaultMessages;
+        currentIndex = (currentIndex + 1) % listToUse.length;
+      });
+    }
+  });
   }
 
   @override

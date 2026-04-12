@@ -5,6 +5,10 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
 import '../widgets/app_background.dart';
 import '../theme/app_texts.dart';
+import '../controllers/register_controller.dart';
+import 'home_view.dart';
+import 'login_view.dart';
+
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 
@@ -13,11 +17,14 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
+  final _formKey = GlobalKey<FormState>();
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   final _confirmPassController = TextEditingController();
+  final _registerController = RegisterController();
 
   String _selectedGender = "";
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,16 +34,57 @@ class _RegisterViewState extends State<RegisterView> {
     super.dispose();
   }
 
-  void _handleRegister() {
+  void _handleRegister() async {
+    // Validaciones básicas
+    if (!_formKey.currentState!.validate()) return;
     if (_selectedGender.isEmpty) {
-      print("¡Falta elegir si eres niño o niña!");
+      _showErrorSnackBar(AppTexts.getText('error_no_gender'));
       return;
     }
     if (_passController.text != _confirmPassController.text) {
-      print("¡Las contraseñas no coinciden!");
+      _showErrorSnackBar(AppTexts.getText('error_pass_match'));
       return;
     }
-    print("Registrando a ${_userController.text} como $_selectedGender...");
+
+    setState(() => _isLoading = true);
+
+    // Generar email único para evitar errores de duplicado durante pruebas
+    String safeName = _userController.text.trim().toLowerCase().replaceAll(' ', '');
+    String fakeEmail = "$safeName@escuelavaliente.com";
+
+    final result = await _registerController.performRegister(
+      name: _userController.text.trim(),
+      email: fakeEmail,
+      password: _passController.text.trim(),
+      gender: _selectedGender,
+    );
+
+    if (mounted) {
+      // IMPORTANTE: Siempre apagamos el cargando al recibir respuesta
+      setState(() => _isLoading = false);
+
+      if (result == null) {
+        // Navegar a Home
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeView(isGuest: false)),
+          (route) => false,
+        );
+      } else {
+        // Mostrar el error real que viene del controlador
+        _showErrorSnackBar(result);
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.errorRed,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -48,25 +96,30 @@ class _RegisterViewState extends State<RegisterView> {
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Column(
-                children: [
-                  const SizedBox(height: 130),
-                  _buildTitle(),
-                  const SizedBox(height: 0),
-                  _buildGenderSelector(),
-                  const SizedBox(height: 10),
-                  _buildMainForm(),
-                  _buildLoginLink(),
-                  const SizedBox(height: 10),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomSubmitButton(
-                      text: AppTexts.getText('start_adventure'),
-                      onPressed: _handleRegister,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 80),
+                    _buildTitle(),
+                    const SizedBox(height: 20),
+                    _buildGenderSelector(),
+                    const SizedBox(height: 10),
+                    _buildMainForm(),
+                    _buildLoginLink(),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomSubmitButton(
+                        text: _isLoading 
+                            ? AppTexts.getText('loading') 
+                            : AppTexts.getText('start_adventure'),
+                        onPressed: _isLoading ? () {} : _handleRegister,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
           ),
@@ -75,20 +128,17 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
+  // --- WIDGETS DE APOYO (Mantener tus estilos visuales) ---
 
   Widget _buildTitle() {
-    return Column(
-      children: [
-        Text(
-          AppTexts.getText('create_your_account'),
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w700,
-            color: AppColors.darkBlue,
-            shadows: const [Shadow(color: Colors.white, blurRadius: 10)],
-          ),
-        ),
-      ],
+    return Text(
+      AppTexts.getText('create_your_account'),
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 30,
+        fontWeight: FontWeight.w800,
+        color: AppColors.darkBlue,
+      ),
     );
   }
 
@@ -97,7 +147,7 @@ class _RegisterViewState extends State<RegisterView> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(AppUI.borderRadiusLarge),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white, width: 2),
       ),
       child: Column(
@@ -106,6 +156,7 @@ class _RegisterViewState extends State<RegisterView> {
             controller: _userController,
             label: AppTexts.getText('your_name'),
             icon: Icons.face_rounded,
+            validator: (value) => (value == null || value.isEmpty) ? "Dinos tu nombre" : null,
           ),
           const Divider(height: 1),
           CustomAuthInput(
@@ -113,14 +164,15 @@ class _RegisterViewState extends State<RegisterView> {
             label: AppTexts.getText('you_secret_key'),
             icon: Icons.vpn_key_rounded,
             isPassword: true,
+            validator: (value) => (value != null && value.length < 6) ? "Mínimo 6 letras" : null,
           ),
           const Divider(height: 1),
           CustomAuthInput(
-            controller:
-                _confirmPassController, 
+            controller: _confirmPassController, 
             label: AppTexts.getText('repite_pass'),
             icon: Icons.vpn_key_rounded,
             isPassword: true,
+            validator: (value) => (value == null || value.isEmpty) ? "Repite la llave" : null,
           ),
         ],
       ),
@@ -132,21 +184,14 @@ class _RegisterViewState extends State<RegisterView> {
       children: [
         Text(
           AppTexts.getText('who_you_are'),
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.darkBlue,
-          ),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.darkBlue),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 15),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _buildAvatarOption(AppTexts.getText('boy'), "assets/icon/icon_profile_boy.png"),
-            _buildAvatarOption(
-              AppTexts.getText('girl'),
-              "assets/icon/icon_profile_home_view.png",
-            ),
+            _buildAvatarOption(AppTexts.getText('girl'), "assets/icon/icon_profile_home_view.png"),
           ],
         ),
       ],
@@ -155,7 +200,6 @@ class _RegisterViewState extends State<RegisterView> {
 
   Widget _buildAvatarOption(String gender, String imagePath) {
     bool isSelected = _selectedGender == gender;
-
     return GestureDetector(
       onTap: () => setState(() => _selectedGender = gender),
       child: Stack(
@@ -164,48 +208,22 @@ class _RegisterViewState extends State<RegisterView> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 120,
-            height: 140,
-            padding: const EdgeInsets.only(bottom: 15),
+            width: 110,
+            height: 130,
+            padding: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.orangeMain.withOpacity(0.15)
-                  : Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: isSelected ? AppColors.orangeMain : Colors.white,
-                width: isSelected ? 4 : 2,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.orangeMain.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ]
-                  : [],
+              color: isSelected ? AppColors.orangeMain.withOpacity(0.2) : Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: isSelected ? AppColors.orangeMain : Colors.white, width: isSelected ? 4 : 2),
             ),
             child: Align(
               alignment: Alignment.bottomCenter,
-              child: Text(
-                gender.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                  color: isSelected ? AppColors.orangeMain : AppColors.darkBlue,
-                ),
-              ),
+              child: Text(gender.toUpperCase(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isSelected ? AppColors.orangeMain : AppColors.darkBlue)),
             ),
           ),
           Positioned(
-            top: -35,
-            child: AnimatedScale(
-              scale: isSelected ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 300),
-              child: Image.asset(imagePath, height: 180, fit: BoxFit.contain),
-            ),
+            top: -30,
+            child: Image.asset(imagePath, height: 140, fit: BoxFit.contain),
           ),
         ],
       ),
@@ -213,35 +231,15 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   Widget _buildLoginLink() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            AppTexts.getText('have_account'),
-            style: const TextStyle(
-              color: AppColors.textDark,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(padding: EdgeInsets.zero),
-            child: Text(
-              AppTexts.getText('session'),
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkBlue,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ],
+    return TextButton(
+      onPressed: () {
+        if (Navigator.canPop(context)) Navigator.pop(context);
+        else Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
+      },
+      child: Text(
+        "${AppTexts.getText('have_account')} ${AppTexts.getText('session')}",
+        style: const TextStyle(decoration: TextDecoration.underline, color: AppColors.darkBlue),
       ),
     );
   }
-
 }

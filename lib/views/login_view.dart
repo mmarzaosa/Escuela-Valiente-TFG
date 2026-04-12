@@ -7,12 +7,11 @@ import '../controllers/login_controller.dart';
 import 'register_view.dart';
 import 'home_view.dart';
 import '../widgets/app_background.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:io';
 import '../theme/app_texts.dart';
 
 class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+  final bool showOfflinePopup;
+  const LoginView({super.key, this.showOfflinePopup = false});
 
   @override
   State<LoginView> createState() => _LoginViewState();
@@ -26,12 +25,21 @@ class _LoginViewState extends State<LoginView> {
 
   bool _isLoading = false;
   String? _starMessage;
-  Color _starTextColor = AppColors.darkBlue; 
+  Color _starTextColor = AppColors.darkBlue;
 
   @override
   void initState() {
     super.initState();
-    _checkConnectivity();
+    if (widget.showOfflinePopup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showOfflineOption();
+      });
+      _starMessage = AppTexts.getText('offline_title');
+      _starTextColor = AppColors.orangeMain;
+      _resetStarMessage(
+        5,
+      ); 
+    }
   }
 
   @override
@@ -42,46 +50,35 @@ class _LoginViewState extends State<LoginView> {
   }
 
   void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+  if (_formKey.currentState!.validate()) {
+    setState(() => _isLoading = true);
 
-      final errorMessage = await _loginController.performLogin(
-        _userController.text,
-        _passController.text,
-      );
+    final errorMessage = await _loginController.performLogin(
+      _userController.text,
+      _passController.text,
+    );
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-
-          if (errorMessage == null) {
-            _starTextColor = AppColors.successGreen;
-            _starMessage = AppTexts.getText('perfect_enter');
-            _navigateToHome(isGuest: false);
-          } else if (errorMessage.contains("network-request-failed") ||
-              errorMessage.contains("offline")) {
-            // --- CASO 2: SIN INTERNET ---
-            _starTextColor = AppColors.orangeMain;
-            _starMessage =
-                AppTexts.getText('login_offline_star');
-
-            // Mostramos un pequeño aviso o diálogo para entrar offline
-            _showOfflineOption();
-          } else {
-            // --- CASO 3: ERROR DE DATOS (User/Pass mal) ---
-            _starTextColor = AppColors.errorRed;
-            _starMessage = errorMessage;
-            _resetStarMessage(4);
-          }
-        });
-      }
-    } else {
+    if (mounted) {
       setState(() {
-        _starTextColor = AppColors.errorRed;
-        _starMessage = AppTexts.getText('login_error');
+        _isLoading = false;
+        if (errorMessage == null) {
+          _starTextColor = AppColors.successGreen;
+          _starMessage = AppTexts.getText('perfect_enter');
+          _navigateToHome(isGuest: false);
+        } else if (errorMessage == "offline") {
+          _starTextColor = AppColors.orangeMain;
+          _starMessage = AppTexts.getText('login_offline_star');
+          _showOfflineOption();
+          _resetStarMessage(5); 
+        } else {
+          _starTextColor = AppColors.errorRed;
+          _starMessage = errorMessage;
+          _resetStarMessage(4); 
+        }
       });
     }
   }
+}
 
   // Función auxiliar para limpiar el mensaje de la estrella
   void _resetStarMessage(int seconds) {
@@ -113,7 +110,10 @@ class _LoginViewState extends State<LoginView> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(AppTexts.getText('mode_offline'), textAlign: TextAlign.center),
+        title: Text(
+          AppTexts.getText('mode_offline'),
+          textAlign: TextAlign.center,
+        ),
         content: Text(
           AppTexts.getText('no_conection_to_school'),
           textAlign: TextAlign.center,
@@ -193,12 +193,7 @@ class _LoginViewState extends State<LoginView> {
         color: AppColors.backgroundCreme.withOpacity(0.9),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: const Color.fromRGBO(
-            205,
-            205,
-            205,
-            1,
-          ),
+          color: const Color.fromRGBO(205, 205, 205, 1),
           width: 2,
         ),
         boxShadow: [
@@ -216,8 +211,9 @@ class _LoginViewState extends State<LoginView> {
             controller: _userController,
             label: AppTexts.getText('username'),
             icon: Icons.person_outline,
-            validator: (value) =>
-                (value == null || value.isEmpty) ? AppTexts.getText('no_valid_user') : null,
+            validator: (value) => (value == null || value.isEmpty)
+                ? AppTexts.getText('no_valid_user')
+                : null,
           ),
           const Divider(color: Color.fromRGBO(205, 205, 205, 1), height: 1),
           CustomAuthInput(
@@ -235,7 +231,9 @@ class _LoginViewState extends State<LoginView> {
           const SizedBox(height: 30),
 
           CustomSubmitButton(
-            text: _isLoading ? AppTexts.getText('loading') : AppTexts.getText('session'),
+            text: _isLoading
+                ? AppTexts.getText('loading')
+                : AppTexts.getText('session'),
             onPressed: _isLoading ? () {} : _handleLogin,
           ),
 
@@ -257,7 +255,7 @@ class _LoginViewState extends State<LoginView> {
           minimumSize: const Size(50, 30),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child:  Text(
+        child: Text(
           AppTexts.getText('forgot_password'),
           style: const TextStyle(
             fontSize: 13,
@@ -304,40 +302,5 @@ class _LoginViewState extends State<LoginView> {
         ),
       ],
     );
-  }
-
-  void _checkConnectivity() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      if (result.isEmpty || result[0].rawAddress.isEmpty) {
-        throw const SocketException("No hay red");
-      }
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const HomeView(isGuest: false),
-            ),
-          );
-        }
-      } else {
-        setState(() {
-          _starMessage = AppTexts.getText('login_welcome');
-        });
-      }
-    } on SocketException catch (_) {
-      if (mounted) {
-        setState(() {
-          _starMessage = AppTexts.getText('offline_title');
-          _starTextColor = AppColors.orangeMain;
-        });
-        _showOfflineOption(); 
-      }
-    }
   }
 }
