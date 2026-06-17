@@ -4,6 +4,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_ui_constants.dart';
 import '../controllers/profile_controller.dart';
 import '../theme/app_texts.dart';
+import '../services/mqtt_service.dart';
+import '../services/mqtt_config.dart';
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
 
@@ -12,6 +14,7 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
+  final MqttService _mqttService = MqttService();
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -81,7 +84,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildDialogActions(BuildContext context) {
-    final ProfileController _controller = ProfileController();
+    final ProfileController controller = ProfileController();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -101,8 +104,15 @@ class _ProfileViewState extends State<ProfileView> {
             elevation: 0,
           ),
           onPressed: () async {
-            await _controller.handleLogout();
+            _mqttService.enviarComando(MqttConfig.cmdBeepError);
+            _mqttService.enviarComando(MqttConfig.cmdRojoOn);
+            _mqttService.enviarComando(AppTexts.getText('hw_logout'));
 
+            await controller.handleLogout();
+            await Future.delayed(const Duration(milliseconds: 1000));
+
+            _mqttService.enviarComando(MqttConfig.cmdRojoOff);
+            _mqttService.enviarComando(AppTexts.getText('hw_idle_status'));
             if (context.mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
@@ -324,7 +334,8 @@ class _ProfileViewState extends State<ProfileView> {
           AppColors.darkBlue,
           AppColors.orangeMain,
           () {
-            print("Perfil");
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+            _mqttService.enviarComando(AppTexts.getText('hw_profile_title'));
           },
         ),
         _buildMenuItem(
@@ -333,7 +344,8 @@ class _ProfileViewState extends State<ProfileView> {
           AppColors.darkBlue,
           AppColors.orangeMain,
           () {
-            print("Progreso");
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+            _mqttService.enviarComando("MI PROGRESO\nNivel 3");
           },
         ),
         _buildMenuItem(
@@ -342,7 +354,8 @@ class _ProfileViewState extends State<ProfileView> {
           AppColors.darkBlue,
           AppColors.orangeMain,
           () {
-            print("Avisos");
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+            _mqttService.enviarComando(AppTexts.getText('hw_warning_title'));
           },
         ),
         _buildMenuItem(
@@ -351,14 +364,15 @@ class _ProfileViewState extends State<ProfileView> {
           AppColors.darkBlue,
           AppColors.orangeMain,
           () {
-            print("Ayuda");
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+            _mqttService.enviarComando(AppTexts.getText('hw_help_title'));
           },
         ),
         const Divider(color: Colors.black12, indent: 20, endIndent: 20),
         _buildMenuItem(
           Icons.logout_rounded,
           AppTexts.getText("exit"),
-          AppColors.errorRed, // Usamos la constante de error
+          AppColors.errorRed, 
           AppColors.errorRed,
           () => _showLogoutDialog(context),
         ),

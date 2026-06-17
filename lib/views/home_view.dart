@@ -5,6 +5,9 @@ import '../theme/app_ui_constants.dart';
 import '../widgets/custom_star_icon.dart';
 import 'profile_view.dart';
 import '../theme/app_texts.dart';
+import '../services/mqtt_service.dart';
+import 'package:escuela_valiente_tfg/services/mqtt_config.dart';
+
 
 class HomeView extends StatefulWidget {
   final bool isGuest; 
@@ -17,6 +20,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 1;
   bool _showStar = false;
+  final MqttService _mqttService = MqttService();
 
   final Map<int, String> _navIcons = {
     0: "assets/icon/icon_book_profile_view.png",
@@ -26,15 +30,18 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    print("¿Es invitado? ${widget.isGuest}");
     Timer(const Duration(seconds: 1), () {
       if (mounted) setState(() => _showStar = true);
     });
+    _mqttService.inicializarMqtt(); 
+    _mqttService.enviarComando(MqttConfig.cmdVerdeOff);
+    _mqttService.enviarComando(MqttConfig.cmdRojoOff);
+    _mqttService.enviarComando(AppTexts.getText('hw_home_view'));
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _screens = [
+    final List<Widget> screens = [
       const Center(
         child: Text(
           "Pantalla Temario",
@@ -51,7 +58,7 @@ class _HomeViewState extends State<HomeView> {
         children: [
           _buildBackground(),
 
-          IndexedStack(index: _selectedIndex, children: _screens),
+          IndexedStack(index: _selectedIndex, children: screens),
 
           if (_selectedIndex == 1) _buildFloatingHelper(),
 
@@ -131,12 +138,12 @@ class _HomeViewState extends State<HomeView> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.backgroundCreme.withOpacity(0.9),
+          color: AppColors.backgroundCreme.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(AppUI.borderRadiusLarge),
           border: Border.all(color: AppColors.textLight, width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -230,7 +237,7 @@ class _HomeViewState extends State<HomeView> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15), 
+            color: Colors.black.withValues(alpha: 0.15), 
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -272,14 +279,14 @@ class _HomeViewState extends State<HomeView> {
             height: 100,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(45),
                 topRight: Radius.circular(45),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
@@ -304,7 +311,11 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildBotonInicioGigante() {
     bool isSelected = _selectedIndex == 1;
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = 1),
+      onTap: () {
+        setState(() => _selectedIndex = 1);
+        _mqttService.enviarComando(AppTexts.getText('hw_home_view'));
+        _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+      },
       child: Container(
         width: 110,
         height: 110,
@@ -321,7 +332,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.orangeMain.withOpacity(0.4),
+              color: AppColors.orangeMain.withValues(alpha: 0.4),
               blurRadius: 15,
               spreadRadius: 2,
               offset: const Offset(0, 5),
@@ -351,7 +362,17 @@ class _HomeViewState extends State<HomeView> {
     String? imagePath = _navIcons[index];
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () {
+        setState(() => _selectedIndex = index);
+          if (index == 2) {
+            _mqttService.enviarComando(AppTexts.getText('hw_profile_title'));
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+
+          } else if (index == 0) {
+            _mqttService.enviarComando(AppTexts.getText('hw_syllabus_title'));
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+          }
+        },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

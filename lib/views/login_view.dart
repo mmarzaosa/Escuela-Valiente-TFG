@@ -1,3 +1,5 @@
+import 'package:escuela_valiente_tfg/services/mqtt_config.dart';
+import 'package:escuela_valiente_tfg/services/mqtt_service.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_text_field.dart';
@@ -23,6 +25,8 @@ class _LoginViewState extends State<LoginView> {
   final _passController = TextEditingController();
   final _loginController = LoginController();
 
+  final MqttService _mqttService = MqttService();
+
   bool _isLoading = false;
   String? _starMessage;
   Color _starTextColor = AppColors.darkBlue;
@@ -30,15 +34,16 @@ class _LoginViewState extends State<LoginView> {
   @override
   void initState() {
     super.initState();
+  
+    _mqttService.inicializarMqtt();
+
     if (widget.showOfflinePopup) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showOfflineOption();
       });
       _starMessage = AppTexts.getText('offline_title');
       _starTextColor = AppColors.orangeMain;
-      _resetStarMessage(
-        5,
-      ); 
+      _resetStarMessage(5); 
     }
   }
 
@@ -49,38 +54,52 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  void _handleLogin() async {
-  if (_formKey.currentState!.validate()) {
-    setState(() => _isLoading = true);
 
-    final errorMessage = await _loginController.performLogin(
-      _userController.text,
-      _passController.text,
-    );
+ void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (errorMessage == null) {
-          _starTextColor = AppColors.successGreen;
-          _starMessage = AppTexts.getText('perfect_enter');
-          _navigateToHome(isGuest: false);
-        } else if (errorMessage == "offline") {
-          _starTextColor = AppColors.orangeMain;
-          _starMessage = AppTexts.getText('login_offline_star');
-          _showOfflineOption();
-          _resetStarMessage(5); 
-        } else {
-          _starTextColor = AppColors.errorRed;
-          _starMessage = errorMessage;
-          _resetStarMessage(4); 
-        }
-      });
+      final errorMessage = await _loginController.performLogin(
+        _userController.text,
+        _passController.text,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (errorMessage == null) {
+            _starTextColor = AppColors.successGreen;
+            _starMessage = AppTexts.getText('perfect_enter');
+
+            _mqttService.enviarComando(MqttConfig.cmdBeepOK);
+            _mqttService.enviarComando(MqttConfig.cmdVerdeOn);
+            _mqttService.enviarComando("${AppTexts.getText('hw_welcome')}\n${_userController.text.trim().toUpperCase()}");
+            _navigateToHome(isGuest: false);
+          } else if (errorMessage == "offline") {
+            _starTextColor = AppColors.orangeMain;
+            _starMessage = AppTexts.getText('login_offline_star');
+
+            _mqttService.enviarComando(MqttConfig.cmdBeepOK);
+            _mqttService.enviarComando(MqttConfig.cmdRojoOn);
+            _mqttService.enviarComando(AppTexts.getText('hw_offline'));
+
+            _showOfflineOption();
+            _resetStarMessage(5); 
+          } else {
+            _starTextColor = AppColors.errorRed;
+            _starMessage = AppTexts.getText('login_error'); 
+
+            _mqttService.enviarComando(MqttConfig.cmdBeepError);
+            _mqttService.enviarComando(MqttConfig.cmdRojoOn);
+            _mqttService.enviarComando(AppTexts.getText('hw_login_error')); 
+
+            _resetStarMessage(4); 
+          }
+        });
+      }
     }
   }
-}
 
-  // Función auxiliar para limpiar el mensaje de la estrella
   void _resetStarMessage(int seconds) {
     Future.delayed(Duration(seconds: seconds), () {
       if (mounted) {
@@ -88,11 +107,15 @@ class _LoginViewState extends State<LoginView> {
           _starMessage = null;
           _starTextColor = AppColors.darkBlue;
         });
+
+        // Apagamos luces y devolvemos la pantalla al estado por defecto
+        _mqttService.enviarComando(MqttConfig.cmdVerdeOff);
+        _mqttService.enviarComando(MqttConfig.cmdRojoOff);
+        _mqttService.enviarComando(AppTexts.getText('hw_idle_status'));
       }
     });
   }
 
-  // Función para navegar (centralizada)
   void _navigateToHome({required bool isGuest}) {
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
@@ -190,7 +213,7 @@ class _LoginViewState extends State<LoginView> {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppColors.backgroundCreme.withOpacity(0.9),
+        color: AppColors.backgroundCreme.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
           color: const Color.fromRGBO(205, 205, 205, 1),
@@ -198,7 +221,7 @@ class _LoginViewState extends State<LoginView> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -280,6 +303,8 @@ class _LoginViewState extends State<LoginView> {
         ),
         TextButton(
           onPressed: () {
+            _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+            _mqttService.enviarComando(AppTexts.getText('hw_create_account'));
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const RegisterView()),

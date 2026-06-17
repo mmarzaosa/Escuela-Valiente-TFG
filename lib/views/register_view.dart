@@ -1,6 +1,6 @@
+import 'package:escuela_valiente_tfg/services/mqtt_config.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_ui_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
 import '../widgets/app_background.dart';
@@ -8,6 +8,7 @@ import '../theme/app_texts.dart';
 import '../controllers/register_controller.dart';
 import 'home_view.dart';
 import 'login_view.dart';
+import '../services/mqtt_service.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -22,9 +23,16 @@ class _RegisterViewState extends State<RegisterView> {
   final _passController = TextEditingController();
   final _confirmPassController = TextEditingController();
   final _registerController = RegisterController();
+  final MqttService _mqttService = MqttService();
 
   String _selectedGender = "";
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _mqttService.inicializarMqtt(); 
+  }
 
   @override
   void dispose() {
@@ -35,7 +43,6 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   void _handleRegister() async {
-    // Validaciones básicas
     if (!_formKey.currentState!.validate()) return;
     if (_selectedGender.isEmpty) {
       _showErrorSnackBar(AppTexts.getText('error_no_gender'));
@@ -60,18 +67,18 @@ class _RegisterViewState extends State<RegisterView> {
     );
 
     if (mounted) {
-      // IMPORTANTE: Siempre apagamos el cargando al recibir respuesta
       setState(() => _isLoading = false);
 
       if (result == null) {
-        // Navegar a Home
+        _mqttService.enviarComando(MqttConfig.cmdBeepOK);
+        _mqttService.enviarComando(MqttConfig.cmdVerdeOn);
+        _mqttService.enviarComando("${AppTexts.getText('hw_welcome')}\n${_userController.text.trim().toUpperCase()}");
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomeView(isGuest: false)),
           (route) => false,
         );
       } else {
-        // Mostrar el error real que viene del controlador
         _showErrorSnackBar(result);
       }
     }
@@ -128,7 +135,6 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
-  // --- WIDGETS DE APOYO (Mantener tus estilos visuales) ---
 
   Widget _buildTitle() {
     return Text(
@@ -146,7 +152,7 @@ class _RegisterViewState extends State<RegisterView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white, width: 2),
       ),
@@ -212,7 +218,7 @@ class _RegisterViewState extends State<RegisterView> {
             height: 130,
             padding: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.orangeMain.withOpacity(0.2) : Colors.white.withOpacity(0.6),
+              color: isSelected ? AppColors.orangeMain.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(25),
               border: Border.all(color: isSelected ? AppColors.orangeMain : Colors.white, width: isSelected ? 4 : 2),
             ),
@@ -232,9 +238,17 @@ class _RegisterViewState extends State<RegisterView> {
 
   Widget _buildLoginLink() {
     return TextButton(
-      onPressed: () {
-        if (Navigator.canPop(context)) Navigator.pop(context);
-        else Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
+      onPressed: () async {
+        if (Navigator.canPop(context)) {
+          _mqttService.enviarComando(MqttConfig.cmdBeepClick);
+          _mqttService.enviarComando(AppTexts.getText('hw_back_login'));
+          await Future.delayed(const Duration(milliseconds: 1000));
+
+          _mqttService.enviarComando(AppTexts.getText('hw_idle_status'));
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
+        }
       },
       child: Text(
         "${AppTexts.getText('have_account')} ${AppTexts.getText('session')}",

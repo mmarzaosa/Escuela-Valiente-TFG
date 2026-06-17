@@ -147,7 +147,7 @@ class _InitialLoadingViewState extends State<InitialLoadingView>
                         height: 16,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: AppColors.darkBlue,
