@@ -81,7 +81,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildDialogActions(BuildContext context) {
-    final ProfileController _controller = ProfileController();
+    final ProfileController controller = ProfileController();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -101,7 +101,7 @@ class _ProfileViewState extends State<ProfileView> {
             elevation: 0,
           ),
           onPressed: () async {
-            await _controller.handleLogout();
+            await controller.handleLogout();
 
             if (context.mounted) {
               Navigator.pushAndRemoveUntil(

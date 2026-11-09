@@ -21,7 +21,7 @@ class CustomSubmitButton extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             const Color.fromRGBO(255, 97, 0, 1),
-            const Color.fromARGB(255, 255, 148, 48).withOpacity(0.7),
+            const Color.fromARGB(255, 255, 148, 48).withValues(alpha: 0.7),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
@@ -31,7 +31,7 @@ class CustomSubmitButton extends StatelessWidget {
         ,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             offset: const Offset(0, 4),
             blurRadius: 10,
           ),

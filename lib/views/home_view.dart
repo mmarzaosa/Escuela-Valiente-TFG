@@ -34,7 +34,7 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _screens = [
+    final List<Widget> screens = [
       const Center(
         child: Text(
           "Pantalla Temario",
@@ -51,7 +51,7 @@ class _HomeViewState extends State<HomeView> {
         children: [
           _buildBackground(),
 
-          IndexedStack(index: _selectedIndex, children: _screens),
+          IndexedStack(index: _selectedIndex, children: screens),
 
           if (_selectedIndex == 1) _buildFloatingHelper(),
 
@@ -131,12 +131,12 @@ class _HomeViewState extends State<HomeView> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.backgroundCreme.withOpacity(0.9),
+          color: AppColors.backgroundCreme.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(AppUI.borderRadiusLarge),
           border: Border.all(color: AppColors.textLight, width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -230,7 +230,7 @@ class _HomeViewState extends State<HomeView> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15), 
+            color: Colors.black.withValues(alpha: 0.15), 
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -272,14 +272,14 @@ class _HomeViewState extends State<HomeView> {
             height: 100,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(45),
                 topRight: Radius.circular(45),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
@@ -321,7 +321,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.orangeMain.withOpacity(0.4),
+              color: AppColors.orangeMain.withValues(alpha: 0.4),
               blurRadius: 15,
               spreadRadius: 2,
               offset: const Offset(0, 5),

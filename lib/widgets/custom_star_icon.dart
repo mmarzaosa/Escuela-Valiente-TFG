@@ -73,11 +73,11 @@ class _AvatarHelperState extends State<AvatarHelper> {
               constraints: const BoxConstraints(maxWidth: 220),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9),
+                color: const Color.fromRGBO(255, 247, 238, 1).withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -100,7 +100,7 @@ class _AvatarHelperState extends State<AvatarHelper> {
             Padding(
               padding: const EdgeInsets.only(right: 75),
               child: CustomPaint(
-                painter: _TrianglePainter(const Color.fromRGBO(255, 247, 238, 1).withOpacity(0.9)),
+                painter: _TrianglePainter(const Color.fromRGBO(255, 247, 238, 1).withValues(alpha: 0.9)),
                 child: const SizedBox(width: 20, height: 12),
               ),
             ),

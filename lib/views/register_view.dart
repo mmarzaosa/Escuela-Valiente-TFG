@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_ui_constants.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_submit_button.dart';
 import '../widgets/app_background.dart';
@@ -146,7 +145,7 @@ class _RegisterViewState extends State<RegisterView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white, width: 2),
       ),
@@ -212,7 +211,7 @@ class _RegisterViewState extends State<RegisterView> {
             height: 130,
             padding: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.orangeMain.withOpacity(0.2) : Colors.white.withOpacity(0.6),
+              color: isSelected ? AppColors.orangeMain.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(25),
               border: Border.all(color: isSelected ? AppColors.orangeMain : Colors.white, width: isSelected ? 4 : 2),
             ),
@@ -233,8 +232,11 @@ class _RegisterViewState extends State<RegisterView> {
   Widget _buildLoginLink() {
     return TextButton(
       onPressed: () {
-        if (Navigator.canPop(context)) Navigator.pop(context);
-        else Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginView()));
+        }
       },
       child: Text(
         "${AppTexts.getText('have_account')} ${AppTexts.getText('session')}",
